@@ -5,12 +5,12 @@ import { Server } from "npm:socket.io@4";
 import { createServer as createHttpServer } from "node:http";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.24.0";
 import { load } from "https://deno.land/std@0.190.0/dotenv/mod.ts";
+// @deno-types="npm:@types/node"
 import { createHash } from "node:crypto";
 import { User, SelfUser, ChatifySocket } from "./types.d.ts";
-import { decode } from "https://deno.land/std/encoding/base64.ts"
+import { decode } from "https://deno.land/std@0.191.0/encoding/base64.ts"
 const env = await load();
 
-// this is astro's favorite function
 function strip(user: SelfUser): User {
     return {
         id: user.id,
@@ -20,13 +20,11 @@ function strip(user: SelfUser): User {
     }
 }
 
-// @ts-nocheck any
-type sex = any;
-
 const app = express();
 const server = createHttpServer(app);
 const io = new Server(server, {
     serveClient: false,
+    // @ts-expect-error cors property exists
     cors: {
         origin: '*',
     },
@@ -88,7 +86,7 @@ io.use(async (socket: ChatifySocket, next) => {
         return;
     }
 
-    const data: sex = response.data[0];
+    const data = response.data[0];
 
     socket.self = {
         id: data.id,
@@ -152,7 +150,7 @@ app.get("/sex", (req, res) => {
     res.send(Math.random() < 0.1 ? "<h1 style='font-size:100px'>😼 <a href='/dox'>" + req.ip : "sex")
 })
 
-app.get("/dox", (req, res) => {
+app.get("/dox", (_req, res) => {
     res.send("<!DOCTYPE html><html lang=\"en\"> <head> <title>xd</title> <meta charset=\"UTF-8\"/> <meta name=\"viewport\" content=\"width=device-width\"\/> </head> <body> <h1 data-endpoint=\"/sex\"></h1> <p data-endpoint=\"/joe\"></p><pre></pre> <script> (async ()=>{for (const elem of document.querySelectorAll('[data-endpoint]')){const endpoint=elem.getAttribute('data-endpoint'); elem.innerHTML=await (await fetch(endpoint)).text();}const ip=await (await fetch('https://ifconfig.me/ip')).text(); const ipData=await (await fetch('/geolocate/' + ip)).json(); const message=`Your IP is ${ip}, you are located in ${ipData.city}, ${ipData.country} and ${ipData.isp} is your ISP.`; document.querySelector('pre').textContent=message;})(); </script> </body></html>");
 })
 
