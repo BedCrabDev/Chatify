@@ -7,7 +7,7 @@ import { createServer as createHttpServer } from "node:http"
 import { createHash } from "node:crypto"
 import { ChatifySocket } from "./types.d.ts"
 import { decode } from "https://deno.land/std@0.191.0/encoding/base64.ts"
-import * as Database from "./database.ts"
+import DatabaseFactory from "./database.ts"
 import * as Utils from "./utils.ts"
 
 const app = express()
@@ -20,6 +20,8 @@ const io = new Server(server, {
    },
    allowEIO3: true
 })
+
+const Database = DatabaseFactory.get()
 
 io.use(async (socket: ChatifySocket, next) => {
    const authStorage = socket.handshake.auth.token

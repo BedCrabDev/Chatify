@@ -1,27 +1,183 @@
 import { Guild, File, User, Membership, Channel, Message, SelfUser } from "./types.d.ts"
 import { load } from "https://deno.land/std@0.190.0/dotenv/mod.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.24.0"
-
-///
-///
-/// SETUP
-///
-///
+import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.24.0"
 
 const env = await load()
 
-const SUPABASE_URL = env["SUPABASE_URL"].endsWith("/")
-   ? env["SUPABASE_URL"].substring(0, env["SUPABASE_URL"].length)
-   : env["SUPABASE_URL"]
-
-const FILE_BASE_URL = `${SUPABASE_URL}/storage/v1/object/public/user_data`
-
-const supabase = createClient(env["SUPABASE_URL"], env["SUPABASE_SERVICE_ROLE"], {
-   auth: {
-      // to disable a warning
-      persistSession: false
+export default class DatabaseFactory {
+   private static instance: Database
+   private static create(): Database {
+      return new Database(
+         createClient(env["SUPABASE_URL"], env["SUPABASE_SERVICE_ROLE"], {
+            auth: {
+               // to disable a warning
+               persistSession: false
+            }
+         })
+      )
    }
-})
+
+   static get(): Database {
+      if (!DatabaseFactory.instance) {
+         DatabaseFactory.instance = this.create()
+      }
+      return this.instance
+   }
+
+   private constructor() {}
+}
+
+class Database {
+   private supabase: SupabaseClient
+   constructor(client: SupabaseClient) {
+      this.supabase = client
+   }
+
+   async authenticate(id: number, key: string): Promise<SelfUser | undefined> {
+      const { data, error } = await this.supabase.from("users").select().eq("id", id).eq("key", key)
+
+      if (error) {
+         console.error(error)
+         return undefined
+      }
+
+      if (!data[0]) {
+         return undefined
+      }
+
+      const result = data[0]
+
+      return {
+         id: id,
+         created: result.created_at,
+         handle: result.handle,
+         displayName: result.display,
+
+         handleLastUpdated: result.handle_updated,
+         email: result.email
+      }
+   }
+
+   async getUser(id: number): Promise<User | undefined> {
+      const { data, error } = await this.supabase.from("users").select().eq("id", id)
+
+      if (error) {
+         console.error(error)
+         return undefined
+      }
+
+      if (!data[0]) return undefined
+
+      const result = data[0]
+
+      return {
+         id: id,
+         created: result["created_at"],
+         handle: result["handle"],
+         displayName: result["display"]
+      }
+   }
+
+   getFileURL(file: File): string {
+      return this.supabase.storage
+         .from("user_data")
+         .getPublicUrl(file.userId + "/" + file.fileName, {
+            transform: {
+               width: file.width,
+               height: file.height
+            }
+         }).data.publicUrl
+   }
+
+   async getGuild(id: number): Promise<Guild | undefined> {
+      const { data, error } = await this.supabase.from("guilds").select().eq("id", id)
+
+      if (error) {
+         console.error(error)
+         return undefined
+      }
+
+      if (!data[0]) return undefined
+
+      const result = data[0]
+
+      const guild: Guild = {
+         id: id,
+         name: result["name"],
+         created: result["created_at"]
+      }
+
+      const icon: File | undefined = createFile(result.icon)
+      if (icon) guild.icon = icon
+
+      return guild
+   }
+
+   async getMembership(guild: number, user: number): Promise<Membership | undefined> {
+      const { data, error } = await this.supabase
+         .from("memberships")
+         .select()
+         .eq("guild", guild)
+         .eq("user", user)
+
+      if (error) {
+         console.error(error)
+         return undefined
+      }
+
+      if (!data[0]) return undefined
+
+      const result = data[0]
+
+      return {
+         guild: result["guild"],
+         user: result["user"]
+      }
+   }
+
+   async getChannel(id: number): Promise<Channel | undefined> {
+      const { data, error } = await this.supabase.from("channels").select().eq("id", id)
+
+      if (error) {
+         console.error(error)
+         return undefined
+      }
+
+      if (!data[0]) return undefined
+
+      const result = data[0]
+
+      return {
+         id: id,
+         guild: result["guild"],
+         created: result["created_at"],
+         name: result["name"],
+         description: result["description"]
+      }
+   }
+
+   async getMessage(id: number): Promise<Message | undefined> {
+      const { data, error } = await this.supabase.from("channels").select().eq("id", id)
+
+      if (error) {
+         console.error(error)
+         return undefined
+      }
+
+      if (!data[0]) return undefined
+
+      const result = data[0]
+
+      return {
+         id: id,
+         created: result["created_at"],
+         channel: result["channel"],
+         content: result["content"],
+         author: result["author"],
+         attachments: createFileBulk(result["attachments"])
+      }
+   }
+}
 
 ///
 ///
@@ -77,154 +233,4 @@ function createFileBulk(jsonb: any | undefined): File[] {
    })
 
    return fileArray
-}
-
-///
-///
-/// EXPORTED
-///
-///
-
-export async function authenticate(id: number, key: string): Promise<SelfUser | undefined> {
-   const { data, error } = await supabase.from("users").select().eq("id", id).eq("key", key)
-
-   if (error) {
-      console.error(error)
-      return undefined
-   }
-
-   if (!data[0]) {
-      return undefined
-   }
-
-   const result = data[0]
-
-   return {
-      id: id,
-      created: result.created_at,
-      handle: result.handle,
-      displayName: result.display,
-
-      handleLastUpdated: result.handle_updated,
-      email: result.email
-   }
-}
-
-export async function getUser(id: number): Promise<User | undefined> {
-   const { data, error } = await supabase.from("users").select().eq("id", id)
-
-   if (error) {
-      console.error(error)
-      return undefined
-   }
-
-   if (!data[0]) return undefined
-
-   const result = data[0]
-
-   return {
-      id: id,
-      created: result["created_at"],
-      handle: result["handle"],
-      displayName: result["display"]
-   }
-}
-
-export function getFileURL(file: File): string {
-   let fileUrl = `${FILE_BASE_URL}/${file.userId}/${file.fileName}?`
-
-   if (file.width && file.height) {
-      fileUrl += `width=${file.width}&height=${file.height}&`
-   }
-
-   return fileUrl.substring(0, fileUrl.length - 1)
-}
-
-export async function getGuild(id: number): Promise<Guild | undefined> {
-   const { data, error } = await supabase.from("guilds").select().eq("id", id)
-
-   if (error) {
-      console.error(error)
-      return undefined
-   }
-
-   if (!data[0]) return undefined
-
-   const result = data[0]
-
-   const guild: Guild = {
-      id: id,
-      name: result["name"],
-      created: result["created_at"]
-   }
-
-   const icon: File | undefined = createFile(result.icon)
-   if (icon) guild.icon = icon
-
-   return guild
-}
-
-export async function getMembership(guild: number, user: number): Promise<Membership | undefined> {
-   const { data, error } = await supabase
-      .from("memberships")
-      .select()
-      .eq("guild", guild)
-      .eq("user", user)
-
-   if (error) {
-      console.error(error)
-      return undefined
-   }
-
-   if (!data[0]) return undefined
-
-   const result = data[0]
-
-   return {
-      guild: result["guild"],
-      user: result["user"]
-   }
-}
-
-export async function getChannel(id: number): Promise<Channel | undefined> {
-   const { data, error } = await supabase.from("channels").select().eq("id", id)
-
-   if (error) {
-      console.error(error)
-      return undefined
-   }
-
-   if (!data[0]) return undefined
-
-   const result = data[0]
-
-   return {
-      id: id,
-      guild: result["guild"],
-      created: result["created_at"],
-      name: result["name"],
-      description: result["description"]
-   }
-}
-
-export async function getMessage(id: number): Promise<Message | undefined> {
-   const { data, error } = await supabase.from("channels").select().eq("id", id)
-
-   if (error) {
-      console.error(error)
-      return undefined
-   }
-
-   if (!data[0]) return undefined
-
-   const result = data[0]
-
-   return {
-      id: id,
-      created: result["created_at"],
-      channel: result["channel"],
-      content: result["content"],
-      author: result["author"],
-      attachments: createFileBulk(result["attachments"])
-   }
 }
