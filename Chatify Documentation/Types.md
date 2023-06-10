@@ -52,6 +52,7 @@ A [[#Guild]] has a bunch of channels and members (see [[#Membership]]). There is
 {
 	id: number,
 	name: string,
+	created: Date,
 	icon: File // optional
 }
 ```
@@ -67,12 +68,13 @@ A [[#Membership]] represents a [[#User]] being in a [[#Guild]]. Basically, if th
 ```
 
 #### Channel
-A [[#Channel]] is where users talk. Each guild has a list of channels that users can talk in. Channel names can include any character. There's also an emoji icon with a color, and a description for users to understand what the channel is for.
+A [[#Channel]] is where users talk. Each guild has a list of channels that users can talk in. Channel names can include any character.
 
 ```json
 {
 	id: number,
 	guild: number,
+	created: Date,
 	name: string,
 	description: string
 }
@@ -84,10 +86,10 @@ A [[#Message]] is sent by a [[#User]] inside of a [[#Channel]]. A message contai
 ```json
 {
 	id: number,
+	created: Date,
 	channel: number,
-	guild: number,
 	content: string,
-	author: User,
+	author: number,
 	attachments: File[]
 }
 ```
