@@ -10,10 +10,7 @@ export function strip(user: SelfUser): User {
 }
 
 export class Arguments {
-   private args: unknown[]
-   constructor(args: unknown[]) {
-      this.args = args
-   }
+   constructor(private args: unknown[]) {}
 
    getString(index: number): string | undefined {
       if (!this.args[index]) return undefined

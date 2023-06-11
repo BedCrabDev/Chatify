@@ -5,10 +5,7 @@ import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-
 const env = await load()
 
 export class Database {
-   private supabase: SupabaseClient
-   constructor(client: SupabaseClient) {
-      this.supabase = client
-   }
+   constructor(private supabase: SupabaseClient) {}
 
    async authenticate(id: number, key: string): Promise<SelfUser | undefined> {
       const { data, error } = await this.supabase.from("users").select().eq("id", id).eq("key", key)
