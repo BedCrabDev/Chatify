@@ -90,12 +90,4 @@ io.on("connect", (socket: ChatifySocket) => {
    })
 })
 
-// app routes
-
-app.get("/files/:userId/:fileName", (req, res) => {
-   res.redirect(
-      `https://aejkgpldmjxkcfaourbd.supabase.co/storage/v1/object/public/user_data/${req.params.userId}/${req.params.fileName}`
-   )
-})
-
 server.listen(8080)
