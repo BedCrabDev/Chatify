@@ -1,4 +1,4 @@
-import { z } from "https://deno.land/x/zod@v3.21.4/mod.ts"
+import { z, ZodType } from "https://deno.land/x/zod@v3.21.4/mod.ts"
 
 const userProps = {
    id: z.number(),
@@ -18,7 +18,7 @@ export const File = z.object({
    userId: z.number(),
    fileName: z.string(),
    width: z.number().optional(),
-   height: z.number()
+   height: z.number().optional()
 })
 
 export const Guild = z.object({
@@ -49,3 +49,28 @@ export const Message = z.object({
    author: z.number(),
    attachments: File.array()
 })
+
+export type toType<T extends ZodType> = T["_output"]
+
+///
+
+import { Socket, Server } from "npm:socket.io@4"
+import { Arguments } from "./utils.ts"
+import { Database } from "./database.ts"
+
+export interface ChatifySocket extends Socket {
+   self?: toType<typeof SelfUser>
+}
+
+export type PacketHandler = {
+   event: string
+   handler: (event: PacketRequest) => void
+}
+
+export type PacketRequest = {
+   io: Server
+   socket: ChatifySocket
+   args: Arguments
+   self: toType<typeof SelfUser>
+   database: Database
+}
