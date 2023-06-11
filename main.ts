@@ -63,17 +63,12 @@ io.use(async (socket: ChatifySocket, next) => {
 })
 
 io.on("connect", (socket: ChatifySocket) => {
-   const message = "😼 " + socket.handshake.address
-
    if (!socket.self) {
-      // log the requesters ip 😼
-      socket.send(message)
-      console.log(message)
       socket.disconnect()
       return
    }
 
-   console.log(socket.self.handle + " (" + message + ") has connected.")
+   console.log(socket.self.handle + " has connected.")
    socket.emit("hello", socket.self)
 
    Handlers.forEach((handler) => {
