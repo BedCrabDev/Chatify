@@ -8,7 +8,8 @@ import { createHash } from "node:crypto"
 import { ChatifySocket } from "./types.d.ts"
 import { decode } from "https://deno.land/std@0.191.0/encoding/base64.ts"
 import DatabaseFactory from "./database.ts"
-import * as Utils from "./utils.ts"
+import getAllHandlers from "./handlers.ts"
+import { Arguments } from "./utils.ts"
 
 const app = express()
 const server = createHttpServer(app)
@@ -22,6 +23,7 @@ const io = new Server(server, {
 })
 
 const Database = DatabaseFactory.get()
+const Handlers = getAllHandlers()
 
 io.use(async (socket: ChatifySocket, next) => {
    const authStorage = socket.handshake.auth.token
@@ -72,24 +74,20 @@ io.on("connect", (socket: ChatifySocket) => {
    }
 
    console.log(socket.self.handle + " (" + message + ") has connected.")
-
    socket.emit("hello", socket.self)
 
-   // socket.on("guild", async (id: number) => {
-   //    if (!socket.self) return
-
-   //    // check if user has a membership
-   //    if (!(await getMembership(id, socket.self.id, supabase))) return
-
-   //    // get the guild
-   //    const guild = await getGuild(id, supabase)
-   //    if (!guild) return // literally impossible but ok
-
-   //    // return the guild
-   //    socket.emit("guild", {
-   //       guild: guild
-   //    })
-   // })
+   Handlers.forEach((handler) => {
+      socket.on(handler.event, (...args) => {
+         if (!socket.self) return
+         handler.handler({
+            io,
+            socket,
+            args: new Arguments(args),
+            self: socket.self,
+            database: Database
+         })
+      })
+   })
 })
 
 // app routes

@@ -27,7 +27,7 @@ export default class DatabaseFactory {
    private constructor() {}
 }
 
-class Database {
+export class Database {
    private supabase: SupabaseClient
    constructor(client: SupabaseClient) {
       this.supabase = client
@@ -87,6 +87,32 @@ class Database {
                height: file.height
             }
          }).data.publicUrl
+   }
+
+   async getGuildList(userId: number): Promise<Guild[]> {
+      const { data, error } = await this.supabase
+         .from("memberships")
+         .select("guilds(*)")
+         .eq("user", userId)
+
+      if (error) {
+         console.error(error)
+         return []
+      }
+
+      const result: Guild[] = []
+
+      data.forEach((entry) => {
+         // @ts-expect-error typescript has brain damage, entry.guilds is not an array
+         const guild: Guild = entry.guilds
+         result.push({
+            id: guild["id"],
+            name: guild["name"],
+            created: guild["created"]
+         })
+      })
+
+      return result
    }
 
    async getGuild(id: number): Promise<Guild | undefined> {

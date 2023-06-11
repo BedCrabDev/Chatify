@@ -1,8 +1,27 @@
-import { Socket } from "npm:socket.io"
+import { Socket, Server } from "npm:socket.io@4"
+import { Arguments } from "./utils.ts"
+import { Database } from "./database.ts"
+
+/// internal types
 
 declare interface ChatifySocket extends Socket {
    self?: SelfUser
 }
+
+declare type PacketHandler = {
+   event: string
+   handler: (event: PacketRequest) => void
+}
+
+declare type PacketRequest = {
+   io: Server
+   socket: ChatifySocket
+   args: Arguments
+   self: SelfUser
+   database: Database
+}
+
+/// app types
 
 declare type User = {
    id: number
