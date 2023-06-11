@@ -5,7 +5,7 @@ import { Server } from "npm:socket.io@4"
 import { createServer as createHttpServer } from "node:http"
 // @deno-types="npm:@types/node"
 import { createHash } from "node:crypto"
-import { ChatifySocket } from "./types.d.ts"
+import { ChatifySocket } from "./types.ts"
 import { decode } from "https://deno.land/std@0.191.0/encoding/base64.ts"
 import { DatabaseInstance } from "./database.ts"
 import getAllHandlers from "./handlers.ts"
@@ -72,7 +72,7 @@ io.on("connect", (socket: ChatifySocket) => {
    socket.emit("hello", socket.self)
 
    handlers.forEach((handler) => {
-      socket.on(handler.event, (...args) => {
+      socket.on(handler.event, (...args: unknown[]) => {
          if (!socket.self) return
          handler.handler({
             io,

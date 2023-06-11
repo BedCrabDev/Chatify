@@ -1,4 +1,4 @@
-import { Guild, File, User, Membership, Channel, Message, SelfUser } from "./types.d.ts"
+import { Guild, File, User, Membership, Channel, Message, SelfUser, toType } from "./types.ts"
 import { load } from "https://deno.land/std@0.190.0/dotenv/mod.ts"
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.24.0"
 
@@ -7,7 +7,7 @@ const env = await load()
 export class Database {
    constructor(private supabase: SupabaseClient) {}
 
-   async authenticate(id: number, key: string): Promise<SelfUser | undefined> {
+   async authenticate(id: number, key: string): Promise<toType<typeof SelfUser> | undefined> {
       const { data, error } = await this.supabase.from("users").select().eq("id", id).eq("key", key)
 
       if (error) {
@@ -32,7 +32,7 @@ export class Database {
       }
    }
 
-   async getUser(id: number): Promise<User | undefined> {
+   async getUser(id: number): Promise<toType<typeof User> | undefined> {
       const { data, error } = await this.supabase.from("users").select().eq("id", id)
 
       if (error) {
@@ -52,7 +52,7 @@ export class Database {
       }
    }
 
-   getFileURL(file: File): string {
+   getFileURL(file: toType<typeof File>): string {
       return this.supabase.storage
          .from("user_data")
          .getPublicUrl(file.userId + "/" + file.fileName, {
@@ -63,7 +63,7 @@ export class Database {
          }).data.publicUrl
    }
 
-   async getGuildList(userId: number): Promise<Guild[]> {
+   async getGuildList(userId: number): Promise<toType<typeof Guild>[]> {
       const { data, error } = await this.supabase
          .from("memberships")
          .select("guilds(*)")
@@ -74,7 +74,7 @@ export class Database {
          return []
       }
 
-      const result: Guild[] = []
+      const result: toType<typeof Guild>[] = []
 
       data.forEach((entry) => {
          // @ts-expect-error typescript has brain damage, entry.guilds is not an array
@@ -89,7 +89,7 @@ export class Database {
       return result
    }
 
-   async getGuild(id: number): Promise<Guild | undefined> {
+   async getGuild(id: number): Promise<toType<typeof Guild> | undefined> {
       const { data, error } = await this.supabase.from("guilds").select().eq("id", id)
 
       if (error) {
@@ -101,19 +101,22 @@ export class Database {
 
       const result = data[0]
 
-      const guild: Guild = {
+      const guild: toType<typeof Guild> = {
          id: id,
          name: result["name"],
          created: result["created_at"]
       }
 
-      const icon: File | undefined = createFile(result.icon)
+      const icon: toType<typeof File> | undefined = createFile(result.icon)
       if (icon) guild.icon = icon
 
       return guild
    }
 
-   async getMembership(guild: number, user: number): Promise<Membership | undefined> {
+   async getMembership(
+      guild: number,
+      user: number
+   ): Promise<toType<typeof Membership> | undefined> {
       const { data, error } = await this.supabase
          .from("memberships")
          .select()
@@ -135,7 +138,7 @@ export class Database {
       }
    }
 
-   async getChannel(id: number): Promise<Channel | undefined> {
+   async getChannel(id: number): Promise<toType<typeof Channel> | undefined> {
       const { data, error } = await this.supabase.from("channels").select().eq("id", id)
 
       if (error) {
@@ -156,7 +159,7 @@ export class Database {
       }
    }
 
-   async getMessage(id: number): Promise<Message | undefined> {
+   async getMessage(id: number): Promise<toType<typeof Message> | undefined> {
       const { data, error } = await this.supabase.from("channels").select().eq("id", id)
 
       if (error) {
@@ -195,7 +198,7 @@ export const DatabaseInstance = new Database(
 ///
 
 // deno-lint-ignore no-explicit-any
-function createFile(jsonb: any | undefined): File | undefined {
+function createFile(jsonb: any | undefined): toType<typeof File> | undefined {
    if (!jsonb) {
       return undefined
    }
@@ -208,7 +211,7 @@ function createFile(jsonb: any | undefined): File | undefined {
       return undefined
    }
 
-   const file: File = {
+   const file: toType<typeof File> = {
       userId: jsonb.userId,
       fileName: jsonb.fileName
    }
@@ -227,14 +230,14 @@ function createFile(jsonb: any | undefined): File | undefined {
 }
 
 // deno-lint-ignore no-explicit-any
-function createFileBulk(jsonb: any | undefined): File[] {
+function createFileBulk(jsonb: any | undefined): toType<typeof File>[] {
    if (!jsonb) {
       return []
    }
 
    // deno-lint-ignore no-explicit-any
    const anyArray = jsonb as any[]
-   const fileArray: File[] = []
+   const fileArray: toType<typeof File>[] = []
 
    anyArray.forEach((anyElem) => {
       const fileElem = createFile(anyElem)

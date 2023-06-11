@@ -1,4 +1,4 @@
-import { PacketHandler, PacketRequest } from "../types.d.ts"
+import { PacketHandler, PacketRequest } from "../types.ts"
 
 async function handler(event: PacketRequest) {
    event.socket.emit("listguilds", await event.database.getGuildList(event.self.id))

@@ -1,6 +1,6 @@
-import { User, SelfUser } from "./types.d.ts"
+import { User, SelfUser, toType } from "./types.ts"
 
-export function strip(user: SelfUser): User {
+export function strip(user: toType<typeof SelfUser>): toType<typeof User> {
    return {
       id: user.id,
       displayName: user.displayName,
