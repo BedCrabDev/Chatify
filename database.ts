@@ -4,29 +4,6 @@ import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-
 
 const env = await load()
 
-export default class DatabaseFactory {
-   private static instance: Database
-   private static create(): Database {
-      return new Database(
-         createClient(env["SUPABASE_URL"], env["SUPABASE_SERVICE_ROLE"], {
-            auth: {
-               // to disable a warning
-               persistSession: false
-            }
-         })
-      )
-   }
-
-   static get(): Database {
-      if (!DatabaseFactory.instance) {
-         DatabaseFactory.instance = this.create()
-      }
-      return this.instance
-   }
-
-   private constructor() {}
-}
-
 export class Database {
    private supabase: SupabaseClient
    constructor(client: SupabaseClient) {
@@ -204,6 +181,15 @@ export class Database {
       }
    }
 }
+
+export const DatabaseInstance = new Database(
+   createClient(env["SUPABASE_URL"], env["SUPABASE_SERVICE_ROLE"], {
+      auth: {
+         // to disable a warning
+         persistSession: false
+      }
+   })
+)
 
 ///
 ///

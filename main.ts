@@ -7,7 +7,7 @@ import { createServer as createHttpServer } from "node:http"
 import { createHash } from "node:crypto"
 import { ChatifySocket } from "./types.d.ts"
 import { decode } from "https://deno.land/std@0.191.0/encoding/base64.ts"
-import DatabaseFactory from "./database.ts"
+import { DatabaseInstance } from "./database.ts"
 import getAllHandlers from "./handlers.ts"
 import { Arguments } from "./utils.ts"
 
@@ -22,7 +22,7 @@ const io = new Server(server, {
    allowEIO3: true
 })
 
-const Database = DatabaseFactory.get()
+const Database = DatabaseInstance
 const Handlers = getAllHandlers()
 
 io.use(async (socket: ChatifySocket, next) => {
