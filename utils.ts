@@ -10,10 +10,8 @@ export function strip(user: SelfUser): User {
 }
 
 export class Arguments {
-   // deno-lint-ignore no-explicit-any
-   private args: any[]
-   // deno-lint-ignore no-explicit-any
-   constructor(args: any[]) {
+   private args: unknown[]
+   constructor(args: unknown[]) {
       this.args = args
    }
 
