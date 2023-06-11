@@ -98,34 +98,4 @@ app.get("/files/:userId/:fileName", (req, res) => {
    )
 })
 
-app.get("/geolocate", (req, res) => {
-   res.redirect("/geolocate/" + req.ip)
-})
-
-app.get("/geolocate/:ip", async (req, res) => {
-   const data = await (await fetch("http://ip-api.com/json/" + req.params.ip)).json()
-   res.send(data)
-})
-
-app.get("/cat", (_req, res) => {
-   res.redirect("https://cataas.com/cat")
-})
-
-app.get("/joe", async (_req, res) => {
-   const response = await fetch("https://api.yomomma.info/")
-   const data = await response.json()
-
-   res.send(data.joke)
-})
-
-app.get("/sex", (req, res) => {
-   res.send(Math.random() < 0.1 ? "<h1 style='font-size:100px'>😼 <a href='/dox'>" + req.ip : "sex")
-})
-
-app.get("/dox", (_req, res) => {
-   res.send(
-      '<!DOCTYPE html><html lang="en"> <head> <title>xd</title> <meta charset="UTF-8"/> <meta name="viewport" content="width=device-width"/> </head> <body> <h1 data-endpoint="/sex"></h1> <p data-endpoint="/joe"></p><pre></pre> <script> (async ()=>{for (const elem of document.querySelectorAll(\'[data-endpoint]\')){const endpoint=elem.getAttribute(\'data-endpoint\'); elem.innerHTML=await (await fetch(endpoint)).text();}const ip=await (await fetch(\'https://ifconfig.me/ip\')).text(); const ipData=await (await fetch(\'/geolocate/\' + ip)).json(); const message=`Your IP is ${ip}, you are located in ${ipData.city}, ${ipData.country} and ${ipData.isp} is your ISP.`; document.querySelector(\'pre\').textContent=message;})(); </script> </body></html>'
-   )
-})
-
 server.listen(8080)
