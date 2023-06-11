@@ -22,8 +22,8 @@ const io = new Server(server, {
    allowEIO3: true
 })
 
-const Database = DatabaseInstance
-const Handlers = getAllHandlers()
+const database = DatabaseInstance
+const handlers = getAllHandlers()
 
 io.use(async (socket: ChatifySocket, next) => {
    const authStorage = socket.handshake.auth.token
@@ -51,7 +51,7 @@ io.use(async (socket: ChatifySocket, next) => {
    }
 
    const hashed = createHash("sha256").update(userPass).digest("hex")
-   const selfUser = await Database.authenticate(userId, hashed)
+   const selfUser = await database.authenticate(userId, hashed)
 
    if (!selfUser) {
       next(new Error("Invalid credentials"))
@@ -71,7 +71,7 @@ io.on("connect", (socket: ChatifySocket) => {
    console.log(socket.self.handle + " has connected.")
    socket.emit("hello", socket.self)
 
-   Handlers.forEach((handler) => {
+   handlers.forEach((handler) => {
       socket.on(handler.event, (...args) => {
          if (!socket.self) return
          handler.handler({
@@ -79,7 +79,7 @@ io.on("connect", (socket: ChatifySocket) => {
             socket,
             args: new Arguments(args),
             self: socket.self,
-            database: Database
+            database
          })
       })
    })
