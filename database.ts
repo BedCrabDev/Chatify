@@ -2,11 +2,18 @@ import { Guild, File, User, Membership, Channel, Message, SelfUser, toType } fro
 import { load } from "https://deno.land/std@0.190.0/dotenv/mod.ts"
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.24.0"
 
+// fetch env
 const env = await load()
 
 export class Database {
    constructor(private supabase: SupabaseClient) {}
 
+   /**
+    * Authenthicates a user
+    * @param id The user's ID
+    * @param key The user's key
+    * @returns SelfUser if the user exists and id/key are correct, undefined if not
+    */
    async authenticate(id: number, key: string): Promise<toType<typeof SelfUser> | undefined> {
       const { data, error } = await this.supabase.from("users").select().eq("id", id).eq("key", key)
 
@@ -32,6 +39,11 @@ export class Database {
       }
    }
 
+   /**
+    * Gets a user by their ID.
+    * @param id The user's ID
+    * @returns User if the user exists, undefined if not
+    */
    async getUser(id: number): Promise<toType<typeof User> | undefined> {
       const { data, error } = await this.supabase.from("users").select().eq("id", id)
 
@@ -52,6 +64,11 @@ export class Database {
       }
    }
 
+   /**
+    * Gets a File's url.
+    * @param file The File
+    * @returns A string URL
+    */
    getFileURL(file: toType<typeof File>): string {
       return this.supabase.storage
          .from("user_data")
@@ -63,6 +80,11 @@ export class Database {
          }).data.publicUrl
    }
 
+   /**
+    * Gets a list of guilds a user can access.
+    * @param userId The user's ID
+    * @returns A list of guilds, undefined if an error occurs or a user is in no guilds
+    */
    async getGuildList(userId: number): Promise<toType<typeof Guild>[]> {
       const { data, error } = await this.supabase
          .from("memberships")
@@ -89,6 +111,11 @@ export class Database {
       return result
    }
 
+   /**
+    * Gets a guild by its ID.
+    * @param id The guild's ID
+    * @returns Guild if the guild exists, undefined if not
+    */
    async getGuild(id: number): Promise<toType<typeof Guild> | undefined> {
       const { data, error } = await this.supabase.from("guilds").select().eq("id", id)
 
@@ -113,6 +140,12 @@ export class Database {
       return guild
    }
 
+   /**
+    * Gets a membership object for a user and a guild.
+    * @param guild The guild's id
+    * @param user The user's id
+    * @returns Membership if it exists, undefined if not
+    */
    async getMembership(
       guild: number,
       user: number
@@ -138,6 +171,11 @@ export class Database {
       }
    }
 
+   /**
+    * Gets a channel by its ID.
+    * @param id The channel's id
+    * @returns Channel if the channel exists, or undefined if not
+    */
    async getChannel(id: number): Promise<toType<typeof Channel> | undefined> {
       const { data, error } = await this.supabase.from("channels").select().eq("id", id)
 
@@ -159,6 +197,11 @@ export class Database {
       }
    }
 
+   /**
+    * Gets a message by its ID.
+    * @param id The message's id
+    * @returns Message if the message exists, or undefined if not
+    */
    async getMessage(id: number): Promise<toType<typeof Message> | undefined> {
       const { data, error } = await this.supabase.from("channels").select().eq("id", id)
 

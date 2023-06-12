@@ -6,11 +6,12 @@ import { createServer as createHttpServer } from "node:http"
 // @deno-types="npm:@types/node"
 import { createHash } from "node:crypto"
 import { ChatifySocket } from "./types.ts"
-import { decode } from "https://deno.land/std@0.191.0/encoding/base64.ts"
+import { decode as decodeBase64 } from "https://deno.land/std@0.191.0/encoding/base64.ts"
 import { DatabaseInstance } from "./database.ts"
 import getAllHandlers from "./handlers.ts"
 import { Arguments } from "./utils.ts"
 
+// create the express & socket.io apps
 const app = express()
 const server = createHttpServer(app)
 const io = new Server(server, {
@@ -22,34 +23,50 @@ const io = new Server(server, {
    allowEIO3: true
 })
 
+// prepare the database and handlers
 const database = DatabaseInstance
 const handlers = getAllHandlers()
 
+// authenthication middleware
 io.use(async (socket: ChatifySocket, next) => {
+   // get token variable
    const authStorage = socket.handshake.auth.token
    if (!authStorage) {
       next(new Error("No authenthication provided: see docs for info"))
       return
    }
 
+   // decode token
    let auth
 
+   // base64
    try {
-      auth = JSON.parse(new TextDecoder().decode(decode(authStorage)))
+      auth = new TextDecoder().decode(decodeBase64(authStorage))
    } catch (error) {
       console.error(error)
-      next(new Error("Invalid JSON or Base64: see docs for info"))
+      next(new Error("Invalid Base64: see docs for info"))
       return
    }
 
+   // json
+   try {
+      auth = JSON.parse(auth)
+   } catch (error) {
+      console.error(error)
+      next(new Error("Invalid JSON (unparsable): see docs for info"))
+      return
+   }
+
+   // get info from token
    const userId = auth["id"]
    const userPass = auth["pass"]
 
    if (!userId || !userPass) {
-      next(new Error("Missing id or pass: see docs for info"))
+      next(new Error("Invalid JSON (missing id or pass property): see docs for info"))
       return
    }
 
+   // check if the user exists
    const hashed = createHash("sha256").update(userPass).digest("hex")
    const selfUser = await database.authenticate(userId, hashed)
 
@@ -58,11 +75,13 @@ io.use(async (socket: ChatifySocket, next) => {
       return
    }
 
+   // login the user
    socket.self = selfUser
    next()
 })
 
 io.on("connect", (socket: ChatifySocket) => {
+   // this should never happen
    if (!socket.self) {
       socket.disconnect()
       return
@@ -71,6 +90,7 @@ io.on("connect", (socket: ChatifySocket) => {
    console.log(socket.self.handle + " has connected.")
    socket.emit("hello", socket.self)
 
+   // register handlers
    handlers.forEach((handler) => {
       socket.on(handler.event, (...args: unknown[]) => {
          if (!socket.self) return
@@ -85,4 +105,5 @@ io.on("connect", (socket: ChatifySocket) => {
    })
 })
 
+// start the http server
 server.listen(8080)

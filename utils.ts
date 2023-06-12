@@ -1,5 +1,10 @@
 import { User, SelfUser, toType } from "./types.ts"
 
+/**
+ * Turns a SelfUser object into a User object
+ * @param user The SelfUser object
+ * @returns A new User object
+ */
 export function strip(user: toType<typeof SelfUser>): toType<typeof User> {
    return {
       id: user.id,
