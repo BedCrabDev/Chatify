@@ -12,8 +12,7 @@ import getAllHandlers from "./handlers.ts"
 import { Arguments } from "./utils.ts"
 
 // create the express & socket.io apps
-const app = express()
-const server = createHttpServer(app)
+const server = createHttpServer(express())
 const io = new Server(server, {
    serveClient: false,
    // @ts-expect-error cors property exists
@@ -22,9 +21,6 @@ const io = new Server(server, {
    },
    allowEIO3: true
 })
-
-// prepare the database and handlers
-const database = DatabaseInstance
 const handlers = getAllHandlers()
 
 // authenthication middleware
@@ -68,7 +64,7 @@ io.use(async (socket: ChatifySocket, next) => {
 
    // check if the user exists
    const hashed = createHash("sha256").update(userPass).digest("hex")
-   const selfUser = await database.authenticate(userId, hashed)
+   const selfUser = await DatabaseInstance.authenticate(userId, hashed)
 
    if (!selfUser) {
       next(new Error("Invalid credentials"))
@@ -99,7 +95,7 @@ io.on("connect", (socket: ChatifySocket) => {
             socket,
             args: new Arguments(args),
             self: socket.self,
-            database
+            database: DatabaseInstance
          })
       })
    })
@@ -107,3 +103,4 @@ io.on("connect", (socket: ChatifySocket) => {
 
 // start the http server
 server.listen(8080)
+// local link -> http://localhost:8080

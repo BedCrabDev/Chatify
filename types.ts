@@ -1,4 +1,4 @@
-import { z, ZodType } from "https://deno.land/x/zod@v3.21.4/mod.ts"
+import { z } from "https://deno.land/x/zod@v3.21.4/mod.ts"
 
 const userProps = {
    id: z.number(),
@@ -50,7 +50,7 @@ export const Message = z.object({
    attachments: File.array()
 })
 
-export type toType<T extends ZodType> = T["_output"]
+export type toType<T extends z.ZodTypeAny> = T["_output"]
 
 ///
 

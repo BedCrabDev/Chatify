@@ -44,4 +44,26 @@ export class Arguments {
          return undefined
       }
    }
+
+   getObject(index: number): Record<string, unknown> | undefined {
+      if (!this.args[index]) return undefined
+      const value = this.args[index]
+
+      if (typeof value == "object" && value != null) {
+         return value as Record<string, unknown>
+      } else {
+         return undefined
+      }
+   }
+
+   getRecord(index: number): unknown[] | undefined {
+      if (!this.args[index]) return undefined
+      const value = this.args[index]
+
+      if (Array.isArray(value)) {
+         return value
+      } else {
+         return undefined
+      }
+   }
 }
