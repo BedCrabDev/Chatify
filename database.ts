@@ -83,7 +83,7 @@ export class Database {
    /**
     * Gets a list of guilds a user can access.
     * @param userId The user's ID
-    * @returns A list of guilds, undefined if an error occurs or a user is in no guilds
+    * @returns A list of guilds
     */
    async getGuildList(userId: number): Promise<toType<typeof Guild>[]> {
       const { data, error } = await this.supabase
@@ -99,12 +99,12 @@ export class Database {
       const result: toType<typeof Guild>[] = []
 
       data.forEach((entry) => {
-         // @ts-expect-error typescript has brain damage, entry.guilds is not an array
-         const guild: Guild = entry.guilds
+         // deno-lint-ignore no-explicit-any
+         const guild: any = entry.guilds
          result.push({
             id: guild["id"],
             name: guild["name"],
-            created: guild["created"]
+            created: guild["created_at"]
          })
       })
 
@@ -172,6 +172,66 @@ export class Database {
    }
 
    /**
+    * Gets a list of members in a guild.
+    * @param guildId The guild's ID
+    * @returns A list of users
+    */
+   async getGuildMembers(guildId: number): Promise<toType<typeof User>[]> {
+      const { data, error } = await this.supabase
+         .from("memberships")
+         .select("users(*)")
+         .eq("guild", guildId)
+
+      if (error) {
+         console.error(error)
+         return []
+      }
+
+      const result: toType<typeof User>[] = []
+
+      data.forEach((entry) => {
+         // deno-lint-ignore no-explicit-any
+         const user: any = entry.users
+         result.push({
+            id: user["id"],
+            created: user["created_at"],
+            handle: user["handle"],
+            displayName: user["display"]
+         })
+      })
+
+      return result
+   }
+
+   /**
+    * Gets a list of the guild's channels.
+    * @param guild The guild's id
+    * @returns A list of guchannelsilds, undefined if an error occurs or a guild has no channels
+    */
+   async getChannels(guild: number): Promise<toType<typeof Channel>[]> {
+      const { data, error } = await this.supabase.from("channels").select().eq("guild", guild)
+
+      if (error) {
+         console.error(error)
+         return []
+      }
+
+      const result: toType<typeof Channel>[] = []
+
+      data.forEach((entry) => {
+         result.push({
+            id: entry.id,
+            guild: entry.guild,
+            created: entry.created_at,
+            name: entry.name,
+            description: entry.description
+         })
+      })
+
+      return result
+   }
+
+   /**
     * Gets a channel by its ID.
     * @param id The channel's id
     * @returns Channel if the channel exists, or undefined if not
@@ -222,6 +282,41 @@ export class Database {
          author: result["author"],
          attachments: createFileBulk(result["attachments"])
       }
+   }
+
+   /**
+    * Finds a list of `limit` (default: 50) many recent messages.
+    * @param channelId The channel's id
+    * @param limit The amount of messages to fetch, default of 50
+    * @returns Message if the message exists, or undefined if not
+    */
+   async getRecentMessages(channelId: number, limit = 50): Promise<toType<typeof Message>[]> {
+      const { data, error } = await this.supabase
+         .from("messages")
+         .select()
+         .eq("channel", channelId)
+         .order("created_at", { ascending: false })
+         .limit(limit)
+
+      if (error) {
+         console.error(error)
+         return []
+      }
+
+      const result: toType<typeof Message>[] = []
+
+      data.forEach((entry) => {
+         result.push({
+            id: entry["id"],
+            created: entry["created_at"],
+            channel: entry["channel"],
+            content: entry["content"],
+            author: entry["author"],
+            attachments: createFileBulk(entry["attachments"])
+         })
+      })
+
+      return result
    }
 }
 

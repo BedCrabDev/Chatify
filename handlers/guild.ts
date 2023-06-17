@@ -12,9 +12,13 @@ async function handler(event: PacketRequest) {
    const guild = await event.database.getGuild(id)
    if (!guild) return // literally impossible but ok
 
+   // get the channels
+   const channels = await event.database.getChannels(guild.id)
+
    // return the guild
    event.socket.emit("guild", {
-      guild: guild
+      guild: guild,
+      channels: channels
    })
 }
 

@@ -21,7 +21,7 @@ When sent to the server with a server id (`number`), sends a `guild` packet of t
 (or nothing is sent back if the guild doesn't exist or membership is missing)
 
 #### `channel`
-When sent to the server with a server id (`number`) and a channel id (`number`), sends a `channel` packet containing all of the messages and users in the channel.
+When sent to the server with a channel id (`number`), sends a `channel` packet containing all of the messages and users in the channel.
 
 ```json
 {
