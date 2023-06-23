@@ -98,7 +98,8 @@ export class Database {
 
       const result: toType<typeof Guild>[] = []
 
-      data.forEach((entry) => {
+      // deno-lint-ignore no-explicit-any
+      data.forEach((entry: any) => {
          // deno-lint-ignore no-explicit-any
          const guild: any = entry.guilds
          result.push({
@@ -189,7 +190,8 @@ export class Database {
 
       const result: toType<typeof User>[] = []
 
-      data.forEach((entry) => {
+      // deno-lint-ignore no-explicit-any
+      data.forEach((entry: any) => {
          // deno-lint-ignore no-explicit-any
          const user: any = entry.users
          result.push({
@@ -218,7 +220,8 @@ export class Database {
 
       const result: toType<typeof Channel>[] = []
 
-      data.forEach((entry) => {
+      // deno-lint-ignore no-explicit-any
+      data.forEach((entry: any) => {
          result.push({
             id: entry.id,
             guild: entry.guild,
@@ -305,7 +308,8 @@ export class Database {
 
       const result: toType<typeof Message>[] = []
 
-      data.forEach((entry) => {
+      // deno-lint-ignore no-explicit-any
+      data.forEach((entry: any) => {
          result.push({
             id: entry["id"],
             created: entry["created_at"],
